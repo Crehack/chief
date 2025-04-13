@@ -10,6 +10,7 @@ import com.example.chief.data.model.Ingredient
 import com.example.chief.data.model.Recette
 import com.example.chief.ui.screen.ListeRecettes
 import com.example.chief.ui.theme.ChiefTheme
+import com.example.chief.ui.screen.AjoutRecetteScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,13 +23,14 @@ class MainActivity : ComponentActivity() {
                     titre = "Pâtes",
                     categorie = "Italien",
                     ingredients = listOf(
-                        Ingredient("Pâtes", 200.0, "g")
+                        Ingredient("Pâtes", 200, "g")
                     ),
                     instructions = "Faire cuire"
                 )
 
             )
             ListeRecettes(recettes = recettesTest)
+            AjoutRecetteScreen()
         }
     }
 }
@@ -42,7 +44,7 @@ fun GreetingPreview() {
             titre = "Pâtes",
             categorie = "Italien",
             ingredients = listOf(
-                Ingredient("Pâtes", 200.0, "g")
+                Ingredient("Pâtes", 200, "g")
             ),
             instructions = "Faire cuire"
         )
