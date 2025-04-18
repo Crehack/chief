@@ -3,54 +3,48 @@ package com.example.chief
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.chief.data.model.Ingredient
 import com.example.chief.data.model.Recette
-import com.example.chief.ui.screen.ListeRecettes
-import com.example.chief.ui.theme.ChiefTheme
+import com.example.chief.ui.navigation.Screen
+import com.example.chief.ui.screen.AccueilScreen
 import com.example.chief.ui.screen.AjoutRecetteScreen
+import com.example.chief.ui.screen.ListeRecettesScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            val recettesTest = listOf(
-                Recette(
-                    id = 1,
-                    titre = "Pâtes",
-                    categorie = "Italien",
-                    ingredients = listOf(
-                        Ingredient("Pâtes", 200, "g")
-                    ),
-                    instructions = "Faire cuire"
-                )
-
-            )
-            ListeRecettes(recettes = recettesTest)
-            AjoutRecetteScreen()
+            ChiefApp()
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    val recettesTest = listOf(
-        Recette(
-            id = 1,
-            titre = "Pâtes",
-            categorie = "Italien",
-            ingredients = listOf(
-                Ingredient("Pâtes", 200, "g")
-            ),
-            instructions = "Faire cuire"
-        )
+fun ChiefApp() {
+    val navController = rememberNavController()
 
-    )
-    ChiefTheme {
-        ListeRecettes(recettes = recettesTest)
+    NavHost(navController = navController, startDestination = Screen.Accueil.route) {
+        composable(Screen.Accueil.route) {
+            AccueilScreen(onAjouterClicked = {
+                navController.navigate(Screen.AjoutRecette.route)
+            } , onNaviguerListe = {navController.navigate(Screen.ListeRecette.route)})
+        }
+        composable(Screen.AjoutRecette.route) {
+            AjoutRecetteScreen(onBack = {
+                navController.popBackStack()
+            })
+        }
+        composable(Screen.ListeRecette.route) {
+
+            val recettes = listOf(
+                Recette(1,"Pizza", "Plat", listOf(Ingredient("test" , 100 , "g")) ,"bla"),
+
+            )
+            ListeRecettesScreen(recettes, onBack = { navController.popBackStack() })
+        }
     }
 }
