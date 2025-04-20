@@ -31,10 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.chief.ui.viewmodel.RecetteViewModel
 
 
 @Composable
-fun AjoutRecetteScreen(onBack : () -> Unit) {
+fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
     var titre by remember { mutableStateOf("") }
     var titreTouched by remember { mutableStateOf(false) }
 
@@ -203,11 +204,19 @@ fun AjoutRecetteScreen(onBack : () -> Unit) {
                 categorie.isNotBlank() &&
                 instructions.isNotBlank() &&
                 ingredients.isNotEmpty()
-        // Bouton final (ajouter la recette)
+
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                // Logique d’enregistrement ici plus tard
+                viewModel.ajouterRecette(
+                    titre = titre,
+                    categorie = categorie,
+                    instructions = instructions,
+                    ingredients = ingredients.map {
+                        Triple(it.nom, it.quantiteText.toFloat(), it.unite)
+                    }
+                )
+                onBack()
             },
             enabled = isRecetteValid,
             modifier = Modifier.align(Alignment.End)
