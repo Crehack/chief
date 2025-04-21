@@ -14,8 +14,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.chief.ui.navigation.Screen
 import com.example.chief.ui.screen.AccueilScreen
 import com.example.chief.ui.screen.AjoutRecetteScreen
+import com.example.chief.ui.screen.DetailRecetteScreen
 import com.example.chief.ui.screen.ListeRecettesScreen
-import com.example.chief.ui.theme.ChiefTheme
 import com.example.chief.ui.viewmodel.RecetteViewModel
 import com.example.chief.ui.viewmodel.RecetteViewModelFactory
 
@@ -51,7 +51,20 @@ fun ChiefApp() {
             LaunchedEffect(Unit) {
                 viewModel.chargerRecettes()
             }
-            ListeRecettesScreen(viewModel.recettes, onBack = { navController.popBackStack() })
+            ListeRecettesScreen(
+                recettes = viewModel.recettes,
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+
+        composable("detailRecette/{titre}") { backStackEntry ->
+            val titre = backStackEntry.arguments?.getString("titre") ?: ""
+            DetailRecetteScreen(
+                titre = titre,
+                viewModel = viewModel ,
+                onBack = {navController.popBackStack()} )
         }
 
     }

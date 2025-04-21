@@ -17,18 +17,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.chief.data.model.Recette
 
 
 @Composable
-fun ListeRecettes(recettes: List<Recette>) {
+fun ListeRecettes(recettes: List<Recette> , navController: NavController) {
     LazyColumn {
         items(recettes) { recette ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                onClick = { navController.navigate("detailRecette/${recette.titre}") }
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = recette.titre, style = MaterialTheme.typography.titleLarge)
@@ -41,8 +43,9 @@ fun ListeRecettes(recettes: List<Recette>) {
 }
 
 @Composable
-fun ListeRecettesScreen(recettes: List<Recette>, onBack: () -> Unit) {
+fun ListeRecettesScreen(recettes: List<Recette>, navController: NavController, onBack: () -> Unit) {
     Column(modifier = Modifier.padding(16.dp)) {
+
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -51,6 +54,7 @@ fun ListeRecettesScreen(recettes: List<Recette>, onBack: () -> Unit) {
             )
 
         }
-        ListeRecettes(recettes)
+        ListeRecettes(recettes, navController)
+
     }
 }
