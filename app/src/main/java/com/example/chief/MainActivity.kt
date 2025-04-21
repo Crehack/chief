@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,7 @@ import com.example.chief.ui.navigation.Screen
 import com.example.chief.ui.screen.AccueilScreen
 import com.example.chief.ui.screen.AjoutRecetteScreen
 import com.example.chief.ui.screen.ListeRecettesScreen
+import com.example.chief.ui.theme.ChiefTheme
 import com.example.chief.ui.viewmodel.RecetteViewModel
 import com.example.chief.ui.viewmodel.RecetteViewModelFactory
 
@@ -55,3 +57,9 @@ fun ChiefApp() {
     }
 }
 
+
+@Preview(showBackground = true)
+@Composable
+fun Preview() {
+    ChiefApp()
+}

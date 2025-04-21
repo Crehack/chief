@@ -14,8 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,16 +36,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.chief.ui.viewmodel.RecetteViewModel
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
+fun AjoutRecetteScreen(
+    onBack: () -> Unit,
+    viewModel: RecetteViewModel
+) {
+    // États principaux
     var titre by remember { mutableStateOf("") }
     var titreTouched by remember { mutableStateOf(false) }
 
-    var categorie by remember { mutableStateOf("") }
-    var categorieTouched by remember { mutableStateOf(false) }
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCategorie by remember { mutableStateOf("") }
+    var nouvelleCategorie by remember { mutableStateOf("") }
 
     var instructions by remember { mutableStateOf("") }
     var instructionsTouched by remember { mutableStateOf(false) }
@@ -51,7 +64,17 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
 
     val ingredients = remember { mutableStateListOf<IngredientUI>() }
 
+    val showNewCategorieField = selectedCategorie == "Autre…"
+    val categorieFinale = if (showNewCategorieField) nouvelleCategorie else selectedCategorie
 
+    val isIngredientValid = nomIngredient.isNotBlank() &&
+            quantiteText.toFloatOrNull() != null &&
+            unite.isNotBlank()
+
+    val isRecetteValid = titre.isNotBlank() &&
+            categorieFinale.isNotBlank() &&
+            instructions.isNotBlank() &&
+            ingredients.isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -59,87 +82,112 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // En-tête avec bouton retour
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Retour",
-                    tint = MaterialTheme.colorScheme.surfaceTint
-                )
-
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour", tint = MaterialTheme.colorScheme.surfaceTint)
             }
             Text("Nouvelle Recette", style = MaterialTheme.typography.headlineSmall)
         }
 
-
+        // Titre
         OutlinedTextField(
             value = titre,
-            onValueChange = { titre = it
-                if (!titreTouched) titreTouched = true },
+            onValueChange = {
+                titre = it
+                if (!titreTouched) titreTouched = true
+            },
             label = { Text("Titre") },
             isError = titreTouched && titre.isBlank(),
             modifier = Modifier.fillMaxWidth()
         )
-
         if (titreTouched && titre.isBlank()) {
             Text(
-                text = "Le titre ne peut pas être vide",
+                "Le titre ne peut pas être vide",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
-        OutlinedTextField(
-            value = categorie,
-            onValueChange = { categorie = it
-                if (!categorieTouched) categorieTouched = true},
-            label = { Text("Catégorie") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = categorieTouched && categorie.isBlank()
-        )
+        // Catégorie (dropdown)
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = if (showNewCategorieField) nouvelleCategorie else selectedCategorie,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Catégorie") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                categories.forEach {
+                    DropdownMenuItem(
+                        text = { Text(it) },
+                        onClick = {
+                            selectedCategorie = it
+                            nouvelleCategorie = ""
+                            expanded = false
+                        }
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Icon(Icons.Default.Add, contentDescription = "Ajouter") },
+                    onClick = {
+                        selectedCategorie = "Autre…"
+                        expanded = false
+                    }
+                )
+            }
+        }
 
-        if (categorieTouched && categorie.isBlank()) {
-            Text(
-                text = "La categorie ne peut pas être vide",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
+        if (showNewCategorieField) {
+            OutlinedTextField(
+                value = nouvelleCategorie,
+                onValueChange = { nouvelleCategorie = it },
+                label = { Text("Nouvelle catégorie") },
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
+        // Instructions
         OutlinedTextField(
             value = instructions,
-            onValueChange = { instructions = it
-                if (!instructionsTouched)  instructionsTouched = true},
+            onValueChange = {
+                instructions = it
+                if (!instructionsTouched) instructionsTouched = true
+            },
             label = { Text("Instructions") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = instructionsTouched && instructions.isBlank()
+            isError = instructionsTouched && instructions.isBlank(),
+            modifier = Modifier.fillMaxWidth()
         )
-
         if (instructionsTouched && instructions.isBlank()) {
             Text(
-                text = "Les instructions ne peuvent pas être vides",
+                "Les instructions ne peuvent pas être vides",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
+        // Ingrédients
         Text("Ingrédients", style = MaterialTheme.typography.titleMedium)
 
-        // Ligne avec 3 champs
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = nomIngredient,
                 onValueChange = { nomIngredient = it },
                 label = { Text("Nom") },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
+                modifier = Modifier.weight(1f)
             )
             OutlinedTextField(
                 value = quantiteText,
@@ -152,30 +200,27 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
                 value = unite,
                 onValueChange = { unite = it },
                 label = { Text("Unité") },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
+                modifier = Modifier.weight(1f)
             )
         }
 
-        // Bouton ajouter
-        val isIngredientValid = nomIngredient.isNotBlank()
-                && quantiteText.toFloatOrNull() != null
-                && unite.isNotBlank()
-        Button(
-            onClick = {
-                val quantite = quantiteText.toFloatOrNull()
-                if (nomIngredient.isNotBlank() && quantite != null && unite.isNotBlank()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
                     ingredients.add(IngredientUI(nomIngredient, quantiteText, unite))
                     nomIngredient = ""
                     quantiteText = ""
                     unite = ""
-                }
-            }, enabled = isIngredientValid
-        ) {
-            Text("Ajouter l’ingrédient")
+                },
+                enabled = isIngredientValid
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Ajouter")
+            }
         }
 
-        // Liste des ingrédients
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,33 +229,27 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
         ) {
             items(ingredients) { ing ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     IconButton(onClick = { ingredients.remove(ing) }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Supprimer",
-                            tint = MaterialTheme.colorScheme.surfaceTint
-                        )
+                        Icon(Icons.Default.Delete, "Supprimer", tint = MaterialTheme.colorScheme.surfaceTint)
                     }
-                    Text(text = "${ing.nom} : ${ing.quantiteText} ${ing.unite}")
-
+                    Text("${ing.nom} : ${ing.quantiteText} ${ing.unite}")
                 }
             }
         }
-        val isRecetteValid = titre.isNotBlank() &&
-                categorie.isNotBlank() &&
-                instructions.isNotBlank() &&
-                ingredients.isNotEmpty()
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Bouton validation
         Button(
             onClick = {
+                viewModel.ajouterCategorieSiNouvelle(categorieFinale)
+
                 viewModel.ajouterRecette(
                     titre = titre,
-                    categorie = categorie,
+                    categorie = categorieFinale,
                     instructions = instructions,
                     ingredients = ingredients.map {
                         Triple(it.nom, it.quantiteText.toFloat(), it.unite)
@@ -218,6 +257,7 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
                 )
                 onBack()
             },
+
             enabled = isRecetteValid,
             modifier = Modifier.align(Alignment.End)
         ) {
@@ -225,6 +265,7 @@ fun AjoutRecetteScreen(onBack: () -> Unit, viewModel: RecetteViewModel) {
         }
     }
 }
+
 
 
 

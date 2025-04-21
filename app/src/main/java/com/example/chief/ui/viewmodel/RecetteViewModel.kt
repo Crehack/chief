@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.chief.data.model.Recette
 import com.example.chief.data.repository.RecetteRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class RecetteViewModel(private val repository: RecetteRepository) : ViewModel() {
     private val _recettes = mutableStateListOf<Recette>()
@@ -33,6 +34,29 @@ class RecetteViewModel(private val repository: RecetteRepository) : ViewModel() 
         _recettes.clear()
         _recettes.addAll(repository.getAll())
     }
+
+    private val _categories = MutableStateFlow<List<String>>(emptyList())
+    val categories = _categories
+
+
+
+    init {
+        chargerCategories()
+    }
+
+    fun chargerCategories() {
+        val toutesLesRecettes = repository.getAll()
+        val distinctes = toutesLesRecettes.map { it.categorie }.distinct()
+        categories.value = distinctes
+    }
+    fun ajouterCategorieSiNouvelle(nouvelleCategorie: String) {
+        val currentCategories = _categories.value
+        if (nouvelleCategorie.isNotBlank() && !currentCategories.contains(nouvelleCategorie)) {
+            _categories.value = currentCategories + nouvelleCategorie
+        }
+    }
+
+
 }
 
 class RecetteViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
@@ -41,3 +65,4 @@ class RecetteViewModelFactory(private val context: Context) : ViewModelProvider.
         return RecetteViewModel(repository) as T
     }
 }
+
